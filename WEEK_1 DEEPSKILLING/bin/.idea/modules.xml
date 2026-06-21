@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/CTS DEEPSKILLING SOLUTIONS.iml" filepath="$PROJECT_DIR$/.idea/CTS DEEPSKILLING SOLUTIONS.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Design Patterns and Principles/FactoryMethodPatternExample/FactoryMethodPatternExample.iml" filepath="$PROJECT_DIR$/Design Patterns and Principles/FactoryMethodPatternExample/FactoryMethodPatternExample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Algorithms_DataStructures/Product_search/Product_search.iml" filepath="$PROJECT_DIR$/Algorithms_DataStructures/Product_search/Product_search.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Design Patterns and Principles/SingletonPatternExample/SingletonPatternExample.iml" filepath="$PROJECT_DIR$/Design Patterns and Principles/SingletonPatternExample/SingletonPatternExample.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,238 @@
+EXERCISE-1 : CONTROL STRUCTURES
+------------------------------------------------------
+-- Create Tables
+
+CREATE TABLE Customers (
+    CustomerID NUMBER PRIMARY KEY,
+    Name VARCHAR2(50),
+    DOB DATE,
+    Balance NUMBER(10,2),
+    IsVIP VARCHAR2(5)
+);
+
+CREATE TABLE Loans (
+    LoanID NUMBER PRIMARY KEY,
+    CustomerID NUMBER,
+    InterestRate NUMBER(5,2),
+    DueDate DATE,
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+);
+
+-- Insert Sample Data
+
+INSERT INTO Customers VALUES (101, 'Prasanna', TO_DATE('10-05-1960','DD-MM-YYYY'), 15000, 'FALSE');
+INSERT INTO Customers VALUES (102, 'Ponni', TO_DATE('15-08-1995','DD-MM-YYYY'), 8000, 'FALSE');
+INSERT INTO Customers VALUES (103, 'Nithin', TO_DATE('20-03-1955','DD-MM-YYYY'), 20000, 'FALSE');
+INSERT INTO Customers VALUES (104, 'Rahul', TO_DATE('25-11-1988','DD-MM-YYYY'), 12000, 'FALSE');
+
+INSERT INTO Loans VALUES (201, 101, 10.5, SYSDATE + 15);
+INSERT INTO Loans VALUES (202, 102, 11.0, SYSDATE + 45);
+INSERT INTO Loans VALUES (203, 103, 9.5, SYSDATE + 20);
+INSERT INTO Loans VALUES (204, 104, 12.0, SYSDATE + 10);
+
+COMMIT;
+
+SET SERVEROUTPUT ON;
+
+DECLARE
+    v_age NUMBER;
+BEGIN
+
+    -- Scenario 1: Apply 1% discount for customers above 60 years
+
+    FOR cust IN (SELECT CustomerID, DOB FROM Customers) LOOP
+        v_age := FLOOR(MONTHS_BETWEEN(SYSDATE, cust.DOB) / 12);
+
+        IF v_age > 60 THEN
+            UPDATE Loans
+            SET InterestRate = InterestRate - 1
+            WHERE CustomerID = cust.CustomerID;
+        END IF;
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE('Interest rate discount applied.');
+
+    -- Scenario 2: Promote customers with balance > 10000 to VIP
+
+    FOR cust IN (SELECT CustomerID, Balance FROM Customers) LOOP
+        IF cust.Balance > 10000 THEN
+            UPDATE Customers
+            SET IsVIP = 'TRUE'
+            WHERE CustomerID = cust.CustomerID;
+        END IF;
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE('VIP status updated.');
+
+    -- Scenario 3: Send reminders for loans due within next 30 days
+
+    FOR loan_rec IN (
+        SELECT c.Name, l.LoanID, l.DueDate
+        FROM Customers c
+        JOIN Loans l
+        ON c.CustomerID = l.CustomerID
+        WHERE l.DueDate BETWEEN SYSDATE AND SYSDATE + 30
+    ) LOOP
+        DBMS_OUTPUT.PUT_LINE(
+            'Reminder: Dear ' || loan_rec.Name ||
+            ', your Loan ID ' || loan_rec.LoanID ||
+            ' is due on ' ||
+            TO_CHAR(loan_rec.DueDate, 'DD-MON-YYYY')
+        );
+    END LOOP;
+
+    COMMIT;
+END;
+/
+
+-- View Final Results
+
+SELECT * FROM Customers;
+SELECT * FROM Loans;
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------
+EXERCISE_3 : STORED PROCEDURES
+-------------------------------------------------------------------------------------------------
+
+-- Create Tables
+
+CREATE TABLE Accounts (
+    AccountID NUMBER PRIMARY KEY,
+    CustomerName VARCHAR2(50),
+    AccountType VARCHAR2(20),
+    Balance NUMBER(10,2)
+);
+
+CREATE TABLE Employees (
+    EmployeeID NUMBER PRIMARY KEY,
+    EmployeeName VARCHAR2(50),
+    Department VARCHAR2(30),
+    Salary NUMBER(10,2)
+);
+
+-- Sample Data
+
+INSERT INTO Accounts VALUES (101, 'Prasanna', 'Savings', 10000);
+INSERT INTO Accounts VALUES (102, 'Ponni', 'Savings', 15000);
+INSERT INTO Accounts VALUES (103, 'Nithin', 'Current', 20000);
+INSERT INTO Accounts VALUES (104, 'Rahul', 'Savings', 25000);
+
+INSERT INTO Employees VALUES (1, 'Arun', 'IT', 50000);
+INSERT INTO Employees VALUES (2, 'Bala', 'HR', 45000);
+INSERT INTO Employees VALUES (3, 'Charan', 'IT', 60000);
+INSERT INTO Employees VALUES (4, 'Deepa', 'Finance', 55000);
+
+COMMIT;
+
+SET SERVEROUTPUT ON;
+
+--------------------------------------------------
+-- Scenario 1: Process Monthly Interest
+--------------------------------------------------
+
+CREATE OR REPLACE PROCEDURE ProcessMonthlyInterest
+IS
+BEGIN
+    UPDATE Accounts
+    SET Balance = Balance + (Balance * 0.01)
+    WHERE AccountType = 'Savings';
+
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Monthly interest processed successfully.');
+END;
+/
+
+--------------------------------------------------
+-- Scenario 2: Update Employee Bonus
+--------------------------------------------------
+
+CREATE OR REPLACE PROCEDURE UpdateEmployeeBonus(
+    p_department IN VARCHAR2,
+    p_bonus_percent IN NUMBER
+)
+IS
+BEGIN
+    UPDATE Employees
+    SET Salary = Salary + (Salary * p_bonus_percent / 100)
+    WHERE Department = p_department;
+
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Bonus updated for department: ' || p_department);
+END;
+/
+
+--------------------------------------------------
+-- Scenario 3: Transfer Funds
+--------------------------------------------------
+
+CREATE OR REPLACE PROCEDURE TransferFunds(
+    p_from_account IN NUMBER,
+    p_to_account IN NUMBER,
+    p_amount IN NUMBER
+)
+IS
+    v_balance NUMBER;
+BEGIN
+    SELECT Balance
+    INTO v_balance
+    FROM Accounts
+    WHERE AccountID = p_from_account;
+
+    IF v_balance >= p_amount THEN
+
+        UPDATE Accounts
+        SET Balance = Balance - p_amount
+        WHERE AccountID = p_from_account;
+
+        UPDATE Accounts
+        SET Balance = Balance + p_amount
+        WHERE AccountID = p_to_account;
+
+        COMMIT;
+
+        DBMS_OUTPUT.PUT_LINE('Fund transfer successful.');
+
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Insufficient balance.');
+    END IF;
+END;
+/
+
+--------------------------------------------------
+-- Execute Procedures
+--------------------------------------------------
+
+BEGIN
+    ProcessMonthlyInterest;
+END;
+/
+
+BEGIN
+    UpdateEmployeeBonus('IT', 10);
+END;
+/
+
+BEGIN
+    TransferFunds(101, 102, 2000);
+END;
+/
+
+--------------------------------------------------
+-- View Results
+--------------------------------------------------
+
+SELECT * FROM Accounts;
+SELECT * FROM Employees;
